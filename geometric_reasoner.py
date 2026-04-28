@@ -64,24 +64,30 @@ def _fmt_coord_list(coords: List) -> str:
     return "; ".join(parts)
 
 
-def _fmt_minimal_plan(plan: List[Tuple]) -> str:
-    """Render minimal_plan as a numbered action list."""
-    lines = []
-    for i, step in enumerate(plan, 1):
+def _fmt_minimal_plan(plan: List[Tuple], drop_initial_pos: bool = True) -> str:
+    """Render minimal_plan as comma-separated action tokens (V2A parser format).
+
+    The ToS V2A parser at eval_utilities._parse_action_sequence splits on ','
+    and expects each token to match  'JumpTo(name)' or 'Rotate(deg)'.
+    'initial_pos' is not a real object in the V2A simulator, so we drop a
+    leading ('jumpto', 'initial_pos') step (the agent already starts there).
+    """
+    parts: List[str] = []
+    for i, step in enumerate(plan):
         if not isinstance(step, (list, tuple)) or len(step) < 2:
             continue
         op, arg = step[0], step[1]
         op = str(op).lower()
+        # Drop the implicit 'reset to start' step at position 0
+        if drop_initial_pos and i == 0 and op in ("jumpto", "jump") and \
+                str(arg).lower() in ("initial_pos", "start", "origin"):
+            continue
         if op in ("jumpto", "jump", "moveto", "goto"):
-            arg_s = str(arg).replace(" ", "_") if arg else ""
-            lines.append(f"{i}. JumpTo({arg_s})")
+            # Object names with spaces are kept as-is (parser does .strip())
+            parts.append(f"JumpTo({arg})")
         elif op in ("rotate", "rot"):
-            lines.append(f"{i}. Rotate({int(arg)})")
-        elif op in ("observe", "look"):
-            lines.append(f"{i}. Observe()")
-        else:
-            lines.append(f"{i}. {op}({arg})")
-    return "\n".join(lines)
+            parts.append(f"Rotate({int(arg)})")
+    return ", ".join(parts) if parts else "Rotate(0)"
 
 
 # --- reasoner ------------------------------------------------------------
