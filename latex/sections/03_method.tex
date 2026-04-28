@@ -1,0 +1,104 @@
+\subsection{Setting (recap of \tos)}
+
+\tos instantiates a partially-observable MDP
+$\mathcal{M} = \langle\mathcal{S},\mathcal{A},\Omega,T,O,c,H\rangle$ over
+procedural multi-room grids of size $N\times M$ on a tree topology of
+rooms with doors as boundary cells. The action space is
+$\mathcal{A} = \{\textsc{Goto}(j),\textsc{Rotate}(\theta),\textsc{Observe},\textsc{Query}(j),\textsc{Term}\}$;
+observations are egocentric within a $90^{\circ}$ FOV, discretised into
+five bearing bins and six distance bins; cost is 1 per \textsc{Observe},
+2 per \textsc{Query}; horizon $H{=}20$ for active rollouts. A spatial
+belief $B_t$ at turn $t$ is any map from history $h_t$ to a
+distribution over world states; \tos elicits the modal estimate
+$\hat B_t$ as a JSON cognitive map at every turn (Section~\ref{sec:related}).
+
+\subsection{Definition of \tb}
+
+\begin{definition}[Territorial belief]\label{def:tb}
+A territorial belief is the tuple
+\[
+B^{\mathrm{ter}}_t = \big( \{T_k\}_{k=1}^{K_t},\; A_t,\; \mathcal{O}_t,\; c_t \big),
+\]
+where each $T_k = (\mathcal{O}_k, D_k, v_k, \tau_k)$ is a territory
+(one per visited room) carrying its observed objects, door cells, a
+visit count, and the last-visit turn; $A_t = (p_a, \phi_a, k_a)$ is
+the agent's pose plus current territory id;
+$\mathcal{O}_t : \mathrm{name}\to(k,p,\phi)$ is the global object
+table; and $c_t : \mathrm{name}\to\N_{\ge 1}$ is the per-object
+confidence counter that gates updates.
+\end{definition}
+
+The flat \tos cogmap is recovered as a marginalisation of
+$B^{\mathrm{ter}}_t$, so \tb is strictly more expressive
+($K{+}N$ extra integer scalars) but, crucially, structurally different:
+updates are scoped at the territory level.
+
+\subsection{Update rule}\label{sec:update}
+
+For each visible object $i$ with observed $(b_i, d_i, \phi_i^{\mathrm{obs}})$,
+we lift the egocentric observation into a global candidate
+position by composing with the agent's pose:
+\[
+p_i^{\mathrm{new}} = p_a + R(\phi_a)\big(d_i \sin b_i,\; d_i \cos b_i\big)^{\!\top},
+\]
+where $R(\phi_a)$ rotates local-forward to global $+y$. The object
+table is then updated by the four-state machine
+
+\begin{equation}\label{eq:fourstate}
+(\mathcal{O}_{t+1}, c_{t+1})(i) =
+\begin{cases}
+\big((k_a, p_i^{\mathrm{new}}, \phi_i^{\mathrm{new}}),\; 1\big) & i \notin \mathcal{O}_t \;\;\text{\textbf{(new)}}\\[2pt]
+\big(\mathcal{O}_t(i),\; c_t(i){+}1\big) & \Delta_i \le \epsilon\;\wedge\; k_a = k_i^{\mathrm{old}}\;\;\text{\textbf{(reinforced)}}\\[2pt]
+\big(\mathcal{O}_t(i),\; c_t(i){-}1\big) & \text{contradiction}\;\wedge\; c_t(i) > 1\;\;\text{\textbf{(buffered)}}\\[2pt]
+\big((k_a, p_i^{\mathrm{new}}, \phi_i^{\mathrm{new}}),\; 1\big) & \text{contradiction}\;\wedge\; c_t(i) \le 1\;\;\text{\textbf{(overwritten)}}
+\end{cases}
+\end{equation}
+where $\Delta_i = \|p_i^{\mathrm{new}} - p_i^{\mathrm{old}}\|_2$ and
+"contradiction" means $\Delta_i > \epsilon$ \emph{or}
+$k_a \ne k_i^{\mathrm{old}}$. Agent state is updated unconditionally;
+the visited territory increments $v_{k_a^{\mathrm{new}}}$ and stamps
+$\tau_{k_a^{\mathrm{new}}} = t{+}1$.
+
+The salient property: \emph{two} contradictions are required to
+overwrite a record reinforced at least once. Algorithm~\ref{alg:tb}
+gives the executable form.
+
+\begin{algorithm}[t]
+\caption{\tb update for one observation}\label{alg:tb}
+\begin{algorithmic}[1]
+\Require object name $i$, observation $(b_i,d_i,\phi_i^{\mathrm{obs}})$, agent state $A_t$, belief $B_t$
+\State $p_i^{\mathrm{new}}\gets p_a + R(\phi_a)(d_i\sin b_i, d_i\cos b_i)^\top$
+\If{$i \notin \mathcal{O}_t$} \State store $(k_a,p_i^{\mathrm{new}},\phi_i^{\mathrm{new}})$, $c(i){\gets}1$ \Comment{\textbf{new}}
+\Else
+  \State $\Delta\gets\|p_i^{\mathrm{new}}-p_i^{\mathrm{old}}\|_2$
+  \If{$\Delta\le\epsilon \wedge k_a{=}k_i^{\mathrm{old}}$} $c(i){+\!\!=\!}1$ \Comment{\textbf{reinforced}}
+  \ElsIf{$c(i)>1$} $c(i){-\!\!=\!}1$ \Comment{\textbf{buffered}}
+  \Else \State store $(k_a,p_i^{\mathrm{new}},\phi_i^{\mathrm{new}})$, $c(i){\gets}1$ \Comment{\textbf{overwritten}}
+  \EndIf
+\EndIf
+\State $v_{k_a}{+\!\!=\!}1$, $\tau_{k_a}{\gets}t{+}1$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analytical predictions on \tos metrics}
+
+\begin{proposition}[Stability]\label{prop:stab}
+Under i.i.d.\ Gaussian observation noise $\eta\sim\mathcal{N}(0,\sigma^2 I)$,
+a flat-cogmap update that overwrites on every observation has
+$\E[\stab_{\mathrm{flat}}] = \tfrac12$. A buffered \tb update with
+buffer $b$ has spurious-overwrite probability bounded by
+$(1-\mathrm{CDF}_\sigma(\epsilon))^b$.
+\end{proposition}
+
+\begin{proposition}[Belief Inertia]\label{prop:inertia}
+For an autoregressive flat update with prior weight $\alpha$, the \tos
+positional inertia satisfies $s_i^{\mathrm{pos}} \to \alpha$ as
+observation noise vanishes. The buffered \tb rule yields a
+\emph{bimodal} inertia profile: $s_i^{\mathrm{pos}}{=}1$ on the first
+contradicting observation, $s_i^{\mathrm{pos}}{\to}0$ after the second.
+For an object whose territory id changes after the perturbation,
+\tb overwrites on the first observation, giving $s_i^{\mathrm{pos}}{\to}0$
+immediately.
+\end{proposition}
+
+Proofs in Appendix~\ref{app:math}.

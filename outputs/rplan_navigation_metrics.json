@@ -1,0 +1,18 @@
+{
+  "num_navigation_episodes": 1500.0,
+  "flat_navigation_success": 0.11533333333333333,
+  "territorial_navigation_success": 0.178,
+  "neural_circuit_navigation_success": 0.9926666666666667,
+  "oracle_reachable_fraction": 1.0,
+  "num_train_plans": 12000.0,
+  "num_test_plans": 3000.0,
+  "area_bins": [
+    989.0,
+    1776.0,
+    3021.75
+  ],
+  "aspect_bins": [
+    0.7936507936507936,
+    1.173913043478261
+  ]
+}

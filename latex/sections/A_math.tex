@@ -1,0 +1,53 @@
+% Companion math appendix; full prose in math_derivations.md
+\subsection{Proof of Proposition~\ref{prop:stab} (Stability)}
+\paragraph{Naive overwrite.}
+Let observations be i.i.d.\ Gaussian:
+$p^{\mathrm{obs}}_i = p^*_i + \eta$,
+$\eta\sim\mathcal{N}(0,\sigma^2 I)$. A flat-cogmap update overwrites
+$\hat p^{(t+1)}_i \gets p^{\mathrm{obs}}_i$, so $\hat p^{(t+1)}_i$ and
+$\hat p^{(t)}_i$ are i.i.d.\ with the same distribution. The event
+"$\hat p^{(t+1)}_i$ is closer to $p^*_i$" therefore has probability
+exactly $\tfrac12$ by symmetry, and $\E[\stab_{\mathrm{flat}}]=\tfrac12$.
+
+\paragraph{Buffered update.}
+Let $T_b$ be the buffered \tb rule with buffer $b$. An overwrite
+occurs only after $b$ consecutive contradictions. Each contradiction
+under i.i.d.\ noise has probability $1 - \mathrm{CDF}_\sigma(\epsilon)$,
+so $\Pr[\hat p^{(t+1)}\ne\hat p^{(t)}] \le (1-\mathrm{CDF}_\sigma(\epsilon))^b$.
+For $\sigma{\approx}1$, $\epsilon{=}1.5$, and $b{=}2$, the spurious-overwrite
+probability is bounded by $\approx 0.017$, consistent with the empirical
+$\stab\to 1.0$ in Table~\ref{tab:smoke}.
+
+\subsection{Proof of Proposition~\ref{prop:inertia} (Belief Inertia)}
+\paragraph{Autoregressive flat baseline.}
+Empirically (Carlini~et~al.~2024; Wang~et~al.~2025) LLMs implement
+$b^{\mathrm{new}}_i \approx \alpha\, b^{\mathrm{old}}_i + (1-\alpha)\, p^{\mathrm{obs}}_i$
+with $\alpha\in(0.3,0.7)$. Substituting in the \tos inertia
+definition,
+\(
+e_i = (1{-}\alpha)(p^{\mathrm{obs}}_i - g^{\mathrm{new}}_i) + \alpha v_i
+\),
+so under low observation noise
+$e_i\to\alpha v_i$, $\cos\theta_i\to 1$, $w_i\to 1$, and
+$s^{\mathrm{pos}}_i\to\alpha$.
+
+\paragraph{Territorial bimodal.}
+The buffered rule absorbs the first contradiction
+($b^{\mathrm{new}}_i = b^{\mathrm{old}}_i$, hence
+$s^{\mathrm{pos}}_i = 1$). The second contradiction triggers a clean
+overwrite to $p^{\mathrm{obs}}_i$, giving
+$\|e_i\|\ll\|v_i\|$ and $s^{\mathrm{pos}}_i\to 0$. Cross-territory
+change collapses to a single-step overwrite by construction, so
+$s^{\mathrm{pos}}_i\to 0$ on the first observation.
+
+\subsection{Familiarity (Day-3 stretch goal)}
+We define
+\[
+f_k(t) = e^{-\lambda(t-\tau_k)}\cdot\frac{\log(1+v_k)}{\log V_{\max}},
+\quad\lambda=0.05,\;V_{\max}=20.
+\]
+Setting $\epsilon_k(t) = \epsilon_0 (1-f_k(t))$ tightens
+contradiction tolerance in well-explored territory, eliminating the
+"first-observation absorbed" property of \tb in highly familiar
+regions and predictably reducing \emph{both} drift and inertia.
+A formal characterisation is left to follow-up work.

@@ -1,0 +1,45 @@
+\paragraph{Day~1 (today, evening).}
+AutoDL RTX-5090 32\,GB; \verb|vllm serve Qwen/Qwen3-VL-7B-Instruct|;
+\verb|git clone --branch release| \tos repository;
+\verb|source setup.sh| (downloads \verb|MLL-Lab/tos-data|);
+\verb|bash tos_extension/run_full_pipeline.sh| with
+\verb|RENDER_MODE=text NUM_SCENES=25|. Deliverable: real
+text-world bar chart that replaces Figure~\ref{fig:metric}.
+
+\paragraph{Day~2.}
+Same pipeline with \verb|RENDER_MODE=vision|. (Vision images come
+pre-rendered; no Unity build required.) If time permits, the
+false-belief subset is run and Belief~Inertia numbers are computed
+per \tos\,\S5.3, on both LLM and \tb. Optional A800 ablation with
+Qwen-VL-32B INT4 to demonstrate the \tb advantage is not a
+small-model artefact.
+
+\paragraph{Day~3.}
+Stretch goals: familiarity-weighted overwrite
+$\epsilon_k(t) = \epsilon_0 (1 - f_k(t))$ (Section~\ref{app:math});
+a \verb|compare_baseline| variant restricted to false-belief turns
+to surface inertia separately. Final figures, polished writeup,
+NeurIPS-style submission draft.
+
+\paragraph{Out of scope.} No fine-tuning or RL training (neither
+budget nor time); no new environment beyond the \tos procedural
+3-room layouts; no multi-agent extension beyond the conclusion.
+
+\paragraph{Risks.}
+The principal risks and mitigations are tabulated below.
+
+\begin{center}\small
+\begin{tabular}{p{0.45\linewidth}p{0.45\linewidth}}
+\toprule
+Risk & Mitigation \\\midrule
+\verb|vllm serve| fails to load Qwen-VL-7B & fall back to
+GPT-4o-mini API (cost $\le$ \$5 for 25 scenes) \\
+\tos \verb|setup.sh| cannot reach HF & pre-download
+\verb|MLL-Lab/tos-data| on Mac and rsync \\
+Real-data \tb advantage smaller than predicted & report honestly;
+the diagnostic itself is the contribution \\
+Time runs out on Day~3 & scope to text-world Stability;
+mark \S5.3 inertia as future work \\
+\bottomrule
+\end{tabular}
+\end{center}

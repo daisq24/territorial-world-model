@@ -1,0 +1,125 @@
+{
+  "env_id": "MemoryMaze-9x9-ExtraObs-v0",
+  "config": {
+    "size": "9x9",
+    "episodes": 5,
+    "steps": 400,
+    "seed": 0,
+    "policy": "wander",
+    "xy_scale": 1.0,
+    "vis_radius": 3,
+    "kernel_sigma": 1.5,
+    "outdir": "outputs"
+  },
+  "aggregate": {
+    "Independent": {
+      "mean_dist_mean": 3.1666666666666665,
+      "mean_dist_std": 0.48304589153964794,
+      "success@2_mean": 0.5,
+      "success@2_std": 0.14907119849998596,
+      "n_episodes": 5
+    },
+    "Shared-flat": {
+      "mean_dist_mean": 2.533333333333333,
+      "mean_dist_std": 1.0666666666666667,
+      "success@2_mean": 0.5999999999999999,
+      "success@2_std": 0.13333333333333333,
+      "n_episodes": 5
+    },
+    "Territorial": {
+      "mean_dist_mean": 4.733333333333333,
+      "mean_dist_std": 0.7423685817106696,
+      "success@2_mean": 0.06666666666666667,
+      "success@2_std": 0.13333333333333333,
+      "n_episodes": 5
+    }
+  },
+  "per_episode": [
+    {
+      "Independent": {
+        "mean_dist": 3.0,
+        "success@2": 0.6666666666666666,
+        "best_of_two": 2.6666666666666665
+      },
+      "Shared-flat": {
+        "mean_dist": 3.0,
+        "success@2": 0.6666666666666666,
+        "best_of_two": 3.0
+      },
+      "Territorial": {
+        "mean_dist": 3.6666666666666665,
+        "success@2": 0.3333333333333333,
+        "best_of_two": 3.6666666666666665
+      }
+    },
+    {
+      "Independent": {
+        "mean_dist": 3.1666666666666665,
+        "success@2": 0.3333333333333333,
+        "best_of_two": 1.0
+      },
+      "Shared-flat": {
+        "mean_dist": 1.3333333333333333,
+        "success@2": 0.6666666666666666,
+        "best_of_two": 1.3333333333333333
+      },
+      "Territorial": {
+        "mean_dist": 4.666666666666667,
+        "success@2": 0.0,
+        "best_of_two": 4.666666666666667
+      }
+    },
+    {
+      "Independent": {
+        "mean_dist": 4.0,
+        "success@2": 0.3333333333333333,
+        "best_of_two": 2.0
+      },
+      "Shared-flat": {
+        "mean_dist": 4.333333333333333,
+        "success@2": 0.3333333333333333,
+        "best_of_two": 4.333333333333333
+      },
+      "Territorial": {
+        "mean_dist": 6.0,
+        "success@2": 0.0,
+        "best_of_two": 6.0
+      }
+    },
+    {
+      "Independent": {
+        "mean_dist": 2.5,
+        "success@2": 0.6666666666666666,
+        "best_of_two": 2.0
+      },
+      "Shared-flat": {
+        "mean_dist": 2.3333333333333335,
+        "success@2": 0.6666666666666666,
+        "best_of_two": 2.3333333333333335
+      },
+      "Territorial": {
+        "mean_dist": 4.666666666666667,
+        "success@2": 0.0,
+        "best_of_two": 4.666666666666667
+      }
+    },
+    {
+      "Independent": {
+        "mean_dist": 3.1666666666666665,
+        "success@2": 0.5,
+        "best_of_two": 1.6666666666666667
+      },
+      "Shared-flat": {
+        "mean_dist": 1.6666666666666667,
+        "success@2": 0.6666666666666666,
+        "best_of_two": 1.6666666666666667
+      },
+      "Territorial": {
+        "mean_dist": 4.666666666666667,
+        "success@2": 0.0,
+        "best_of_two": 4.666666666666667
+      }
+    }
+  ],
+  "wall_time_sec": 111.73878288269043
+}

@@ -1,0 +1,68 @@
+\paragraph{Smoke-test trajectory.} We validate the entire pipeline on a
+synthetic 4-turn trajectory in which an LLM cognitive map drifts on
+turn~3 (chair coordinates corrupted) and approximately recovers on
+turn~4. This is sufficient to exercise all metric paths and to verify
+both directions of the \tb update machine
+(Algorithm~\ref{alg:tb})---reinforce, buffer, overwrite. The
+pipeline produces \verb|comparison_metrics.json| and
+\verb|comparison_chart.png| (Figure~\ref{fig:metric}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\textwidth]{fig01_metric_comparison.pdf}
+\caption{Smoke-test comparison on the synthetic trajectory. Five
+\tos probing metrics show \tb-favouring deltas; one
+(\textsc{Perception (Pos)}) goes the other way, reflecting the
+expected sub-cell-precision cost of ego$\to$global re-projection.
+\textbf{Real-data version follows on Day~2.}}\label{fig:metric}
+\end{figure}
+
+\begin{table}[t]
+\centering\small
+\caption{Smoke-test aggregate (single trajectory, $n{=}1$); positive
+$\Delta$ means \tb is better.}\label{tab:smoke}
+\begin{tabular}{lrrr}
+\toprule
+Metric & LLM & \tb & $\Delta$ \\\midrule
+Correctness (Pos) & 0.26 & 0.44 & \textbf{+0.19} \\
+Correctness (Ori) & 0.67 & 1.00 & \textbf{+0.33} \\
+Stability (Pos)   & 0.67 & 1.00 & \textbf{+0.33} \\
+Stability (Ori)   & 0.71 & 1.00 & \textbf{+0.29} \\
+Perception (Pos)  & 0.84 & 0.59 & $-$0.25 \\
+Perception (Ori)  & 1.00 & 1.00 & 0.00 \\
+Self-track (Pos)  & 1.00 & 1.00 & 0.00 \\
+Self-track (Ori)  & 1.00 & 1.00 & 0.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The single negative $\Delta$ is the expected ego$\to$global
+discretisation cost discussed in Section~\ref{sec:method} (sub-cell
+precision is sacrificed in exchange for region-level stability and
+orientation correctness). The four positive deltas on Correctness and
+Stability are consistent with Proposition~\ref{prop:stab} for
+$b{=}2$ at the configured $\epsilon$.
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.46\textwidth}\centering
+\includegraphics[width=\linewidth]{fig02_update_rule.pdf}
+\caption{The four-state object-update machine of \tb.}
+\end{subfigure}\hfill
+\begin{subfigure}{0.46\textwidth}\centering
+\includegraphics[width=\linewidth]{fig03_drift_curve_cartoon.pdf}
+\caption{Hypothesised drift profile (cartoon, replaced by real
+AutoDL data on Day~2).}
+\end{subfigure}
+\caption{Update rule (left) and predicted Stability shape (right).}
+\end{figure}
+
+\paragraph{What the smoke test does \emph{not} prove.}
+The synthetic trajectory uses a "perfect-perception LLM" that copies
+ground-truth coordinates verbatim, which is why
+\textsc{Perception (Pos)} hits 0.84 for the LLM in
+Table~\ref{tab:smoke}. On real AutoDL-rendered data, the LLM will
+itself be subject to perception error, and the gap on
+\textsc{Perception (Pos)} is expected to shrink or invert. The
+preliminary numbers therefore validate \emph{the pipeline and the
+direction of the comparisons}, not the magnitudes.

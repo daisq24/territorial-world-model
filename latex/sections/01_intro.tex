@@ -1,0 +1,64 @@
+Foundation models that pass disembodied spatial-reasoning benchmarks
+(\textit{e.g.\ } SpartQA \citep{mirzaee2021spartqa}, SpatialVLM
+\citep{chen2024spatialvlm}, MMSI-Bench \citep{yang2025mmsi}) struggle
+once the agent must \emph{actively} acquire information under partial
+observability. \tos \citep{zhang2026theoryofspace} formalises this gap by
+asking foundation-model agents to (i) decide what to observe next,
+(ii) externalise their cognitive map at every turn, and (iii) revise
+that map after a covert false-belief perturbation. Across GPT-5.2,
+Gemini-3-Pro, Claude-4.5-Sonnet and three open-source vision-language
+models, \tos identifies two consistent failure modes:
+
+\begin{itemize}
+\item \textbf{Belief drift} (\tos\,\S5.1): a previously correct
+prediction has only $\sim$57--67\% probability of remaining correct in
+the next turn (vision-world Stability scores).
+
+\item \textbf{Belief inertia} (\tos\,\S5.3): after objects are silently
+relocated, vision agents persist with the obsolete coordinates
+\emph{despite directly observing} the new layout (positional inertia
+35--69\%, orientational inertia 51--69\%).
+\end{itemize}
+
+\paragraph{Hypothesis.}
+Both failures share a common architectural root: foundation models
+maintain a \emph{flat} belief over individual object coordinates, with
+no intermediate structural unit at which (a) to anchor temporal
+stability or (b) to localise revision when the world changes. The
+mammalian brain does not store space this way: place cells
+\citep{okeefe1971} and grid cells \citep{hafting2005} provide a
+\emph{region-level} code, and animal territoriality
+\citep{burt1943,powell2012homerange} organises familiarity, ownership,
+and recovery at the level of the \emph{home range}. Recent neural-AI
+replications \citep{banino2018grid} show region-level codes emerge
+spontaneously even in artificial agents.
+
+\paragraph{Contribution.}
+We introduce \tb, a structurally region-level belief representation,
+and plug it as a diagnostic baseline into the \tos benchmark. \tb
+organises observed objects under room-level latent units, accumulates a
+visit-and-recency familiarity signal, and gates per-object updates by a
+confidence buffer that requires \emph{two} contradictory observations
+before overwriting a stored fact. We:
+
+\begin{enumerate}
+\item formalise \tb as an extension of the \tos belief
+$\hat B_t \in \mathcal{J}$ (Section~\ref{sec:method});
+
+\item analytically derive the consequence on Stability and
+Belief~Inertia (Section~\ref{sec:method}, full proofs in
+Appendix~\ref{app:math});
+
+\item implement a Python post-hoc replay tool that ingests the
+\tos exploration log and emits a parallel \tb cognitive map per turn,
+without retraining or re-rolling the underlying LLM
+(Section~\ref{sec:setup});
+
+\item report preliminary smoke-test numbers and the planned full
+Qwen-VL-7B runs (Section~\ref{sec:results}--\ref{sec:plan}).
+\end{enumerate}
+
+The framing is explicitly diagnostic rather than performance-chasing:
+the goal is to expose \emph{which} \tos failure modes are tied to the
+flatness of LLM cognitive maps and which are not, by substituting a
+structurally different cognitive map into the same probing pipeline.

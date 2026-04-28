@@ -1,0 +1,14 @@
+{
+  "flat_next_state_accuracy": 0.8921875,
+  "territorial_next_state_accuracy": 0.9984375,
+  "flat_boundary_accuracy": 1.0,
+  "territorial_boundary_accuracy": 1.0,
+  "flat_cross_boundary_accuracy": 1.0,
+  "territorial_cross_boundary_accuracy": 1.0,
+  "flat_aliased_state_accuracy": 0.8829847371396269,
+  "territorial_aliased_state_accuracy": 0.998304126625212,
+  "flat_planning_success": 0.525,
+  "territorial_planning_success": 0.9083333333333333,
+  "flat_mean_plan_length": 3.746031746031746,
+  "territorial_mean_plan_length": 5.990825688073395
+}

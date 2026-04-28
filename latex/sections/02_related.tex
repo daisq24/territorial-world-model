@@ -1,0 +1,56 @@
+% Condensed from lit_review_condensed.md; ~3/4 column.
+\paragraph{From passive to active spatial reasoning.}
+Static-scene benchmarks \citep{weston2015babi,shi2022stepgame,
+mirzaee2021spartqa,chen2024spatialvlm,ma20243dsr,yang2025mmsi} evaluate
+disembodied spatial reasoning. A second wave introduced
+\emph{cognitive-map prediction} as an auxiliary objective:
+VSI-Bench \citep{yang2025vsi} and MindCube \citep{yin2025mindcube}
+showed that explicit map prediction improves video and multi-view QA.
+\tos \citep{zhang2026theoryofspace} departs from both lines: the agent
+itself decides what to observe next, externalises its cognitive map at
+every step (probing), and is tested under a \emph{false-belief}
+perturbation borrowed from developmental psychology
+\citep{wimmer1983false}. \tos provides the only published probing
+benchmark that simultaneously evaluates Stability, Self-tracking,
+Local$\leftrightarrow$Global consistency, and Belief Inertia under a
+single representation.
+
+\paragraph{Cognitive maps in neuroscience and bio-inspired AI.}
+Place cells \citep{okeefe1971}, grid cells \citep{hafting2005}, and
+their hierarchical structure \citep{stensola2012} encode space at the
+region level rather than as a flat coordinate list. Banino~et~al.\
+\citep{banino2018grid} showed that grid-like codes \emph{spontaneously
+emerge} in deep RL agents; MoHA (Motivational Cognitive Maps,
+\citet{mohacog2025}) modulates the spatial map by motivational
+signals; RoboMemory \citep{robomemory2024} integrates spatial,
+temporal, and episodic memory in a multi-memory architecture. None of
+these works yet expose their region-level structure to a probing
+benchmark of the kind \tos provides.
+
+\paragraph{Territoriality, familiarity, ownership.}
+Behavioural ecology defines \emph{territory} as the spatial unit at
+which familiarity, defence, and recovery are organised
+\citep{burt1943,powell2012homerange}. AI work has not directly
+borrowed this framing: count-based exploration bonuses
+\citep{burda2018rnd,pathak2017icm} treat visitation as a reward
+signal, not a structural property of regions; Voronoi-based coverage
+\citep{cortes2004coverage} and learned multi-robot patrolling
+\citep{magec2024,patrolppo2025} pre-assign or emergently allocate
+regions but never let the partition itself emerge from familiarity.
+The \emph{dual-source territoriality} framing this project realises
+---physical (room walls) plus familiarity (visit-weighted)---has no
+direct precedent in the foundation-model literature.
+
+\paragraph{World models and long-horizon spatial tasks.}
+DreamerV3 \citep{hafner2023dreamerv3} and the Memory Maze benchmark
+\citep{pasukonis2023memorymaze} show that latent world models
+substantially outperform model-free methods on long-horizon memory.
+Recall-to-Imagine \citep{r2i2024} adds episodic retrieval and reaches
+superhuman Memory-Maze performance. These methods, however, treat the
+latent space as monolithic; territorial factorisation of the latent
+remains an explicit open direction. VAGEN \citep{wang2025vagen}---the
+multi-turn VLM-RL framework on which the \tos environment is built---
+provides the only ready infrastructure to actually \emph{train} a
+world model on \tos. Training is out of scope for this 3-day course
+project, but the post-hoc \tb representation we evaluate is shaped to
+be a drop-in substrate for that follow-up.

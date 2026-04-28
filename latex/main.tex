@@ -1,0 +1,144 @@
+% =====================================================================
+% main.tex --- Territorial Belief on Theory-of-Space
+% NeurIPS-style course-project proposal / open-defense draft.
+%
+% Recommended Overleaf setup (one-click):
+%   1. New Project -> Templates -> NeurIPS 2024 (or 2025 if available)
+%   2. Replace main.tex with this file.
+%   3. Drop the figures/ folder (already exported as .pdf and .png) at
+%      the project root.
+%   4. Compile with pdfLaTeX. (XeLaTeX also works.)
+%
+% If the official NeurIPS sty is not available, the document still
+% compiles under article+10pt with mild visual differences.
+% =====================================================================
+
+\documentclass{article}
+
+% --- Try the official NeurIPS style; fall back to plain article. -----
+\IfFileExists{neurips_2025.sty}{%
+  \usepackage[final]{neurips_2025}
+}{%
+  \IfFileExists{neurips_2024.sty}{%
+    \usepackage[final]{neurips_2024}
+  }{%
+    % Fallback: tighten margins so the layout looks NeurIPS-ish.
+    \usepackage[margin=1in]{geometry}
+  }
+}
+
+% --- Encoding / font / language ---------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% --- Math / theorem ---------------------------------------------------
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+
+% --- Figures / floats / tables ---------------------------------------
+\usepackage{graphicx}
+\graphicspath{{figures/}{../figures/}}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% --- Algorithms (used in §3.1) ---------------------------------------
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% --- Hyperref + cleveref MUST be loaded LAST -------------------------
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\usepackage{cleveref}
+
+% --- Custom shorthands ------------------------------------------------
+\newcommand{\tos}{\textsc{Theory-of-Space}\xspace}
+\newcommand{\tb}{\textsc{TerritorialBelief}\xspace}
+\newcommand{\stab}{\mathrm{Stab}}
+\newcommand{\inertia}{\mathrm{Inertia}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\E}{\mathbb{E}}
+\usepackage{xspace}
+
+% --- Title / authors --------------------------------------------------
+\title{Territorial Belief for Active Spatial Exploration:\\
+A Diagnostic Extension of \tos}
+
+\author{%
+  Cora \\
+  Brain \& Machine Intelligence (08), Spring 2026 \\
+  \texttt{f\_raike@mail.com} \\
+}
+
+\begin{document}
+\maketitle
+
+% =====================================================================
+\begin{abstract}
+The recent ICLR-2026 \tos benchmark reframes spatial intelligence as the
+ability to \emph{actively} construct, revise, and exploit an internal
+spatial belief, and reveals two characteristic failures of large
+multimodal foundation models: (i) \emph{belief drift}---previously correct
+predictions get silently corrupted in later turns---and (ii) \emph{belief
+inertia}---when objects move, the model fails to overwrite obsolete
+priors. We argue that both failures share a common root: foundation
+models maintain a flat coordinate-level belief with no structural unit at
+which to anchor stability or to localise revision. Drawing on
+hippocampal place/grid-cell biology and animal territoriality, we
+introduce \tb, a representation that organises objects under
+room-level latent units, accumulates familiarity, and gates updates via
+a confidence buffer. We formalise the representation, plug it as a
+diagnostic baseline into the official \tos benchmark, and show in
+preliminary smoke-test runs that \tb improves Stability and orientation
+Correctness over a free-form LLM cognitive map, at a measurable
+sub-cell-precision cost on positional Perception. Full-scale Qwen-VL-7B
+runs on 25 procedurally generated 3-room scenes (text \& vision worlds)
+are scheduled for the next two days; the open-defence is built around
+the methodology, the formal model, and these preliminary numbers.
+\end{abstract}
+% =====================================================================
+
+\section{Introduction}\label{sec:intro}
+
+\input{sections/01_intro.tex}
+
+\section{Related Work}\label{sec:related}
+
+\input{sections/02_related.tex}
+
+\section{Method: Territorial Belief}\label{sec:method}
+
+\input{sections/03_method.tex}
+
+\section{Experimental Setup}\label{sec:setup}
+
+\input{sections/04_setup.tex}
+
+\section{Preliminary Results}\label{sec:results}
+
+\input{sections/05_results.tex}
+
+\section{Planned Experiments and Risks}\label{sec:plan}
+
+\input{sections/06_plan.tex}
+
+\section{Conclusion}\label{sec:conclusion}
+
+\input{sections/07_conclusion.tex}
+
+% =====================================================================
+\bibliographystyle{plainnat}
+\bibliography{refs}
+% =====================================================================
+
+\appendix
+\section{Math Derivations (full)}\label{app:math}
+\input{sections/A_math.tex}
+
+\end{document}

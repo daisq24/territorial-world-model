@@ -1,0 +1,931 @@
+{
+  "env_id": "MemoryMaze-13x13-ExtraObs-v0",
+  "config": {
+    "size": "13x13",
+    "episodes": 5,
+    "seeds": 1,
+    "steps": 500,
+    "policy": "wander",
+    "xy_scale": 1.0,
+    "miss_rate": 0.3,
+    "fp_rate": 0.05,
+    "kernel_sigma": 1.5,
+    "vis_radius": 3,
+    "conditions": "flat,partition,familiarity,dual",
+    "top": false,
+    "outdir": "outputs",
+    "save_figs": 3,
+    "viz": 0
+  },
+  "aggregate": {
+    "Flat": {
+      "mean_dist_mean": 4.2666666666666675,
+      "mean_dist_std": 2.0805982045769644,
+      "success@2_mean": 0.6,
+      "success@2_std": 0.13333333333333333,
+      "success@4_mean": 0.6,
+      "success@4_std": 0.13333333333333333,
+      "n_episodes": 5
+    },
+    "Territorial(partition)": {
+      "mean_dist_mean": 5.466666666666667,
+      "mean_dist_std": 1.359738536958076,
+      "success@2_mean": 0.39999999999999997,
+      "success@2_std": 0.24944382578492943,
+      "success@4_mean": 0.4666666666666666,
+      "success@4_std": 0.1632993161855452,
+      "n_episodes": 5
+    },
+    "Territorial(familiarity)": {
+      "mean_dist_mean": 4.2666666666666675,
+      "mean_dist_std": 1.8547236990991407,
+      "success@2_mean": 0.6,
+      "success@2_std": 0.13333333333333333,
+      "success@4_mean": 0.6,
+      "success@4_std": 0.13333333333333333,
+      "n_episodes": 5
+    },
+    "Territorial(dual)": {
+      "mean_dist_mean": 5.466666666666667,
+      "mean_dist_std": 1.359738536958076,
+      "success@2_mean": 0.39999999999999997,
+      "success@2_std": 0.24944382578492943,
+      "success@4_mean": 0.4666666666666666,
+      "success@4_std": 0.1632993161855452,
+      "n_episodes": 5
+    }
+  },
+  "per_episode": [
+    {
+      "Flat": {
+        "mean_dist": 2.3333333333333335,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              8,
+              2
+            ],
+            "truth": [
+              8,
+              2
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              8,
+              6
+            ],
+            "truth": [
+              8,
+              6
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              5,
+              7
+            ],
+            "truth": [
+              2,
+              11
+            ],
+            "manhattan_dist": 7
+          }
+        ]
+      },
+      "Territorial(partition)": {
+        "mean_dist": 5.333333333333333,
+        "success@2": 0.3333333333333333,
+        "success@4": 0.3333333333333333,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              8,
+              3
+            ],
+            "truth": [
+              8,
+              2
+            ],
+            "manhattan_dist": 1
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              5,
+              1
+            ],
+            "truth": [
+              8,
+              6
+            ],
+            "manhattan_dist": 8
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              5,
+              7
+            ],
+            "truth": [
+              2,
+              11
+            ],
+            "manhattan_dist": 7
+          }
+        ]
+      },
+      "Territorial(familiarity)": {
+        "mean_dist": 2.3333333333333335,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              8,
+              2
+            ],
+            "truth": [
+              8,
+              2
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              8,
+              6
+            ],
+            "truth": [
+              8,
+              6
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              5,
+              7
+            ],
+            "truth": [
+              2,
+              11
+            ],
+            "manhattan_dist": 7
+          }
+        ]
+      },
+      "Territorial(dual)": {
+        "mean_dist": 5.333333333333333,
+        "success@2": 0.3333333333333333,
+        "success@4": 0.3333333333333333,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              8,
+              3
+            ],
+            "truth": [
+              8,
+              2
+            ],
+            "manhattan_dist": 1
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              5,
+              1
+            ],
+            "truth": [
+              8,
+              6
+            ],
+            "manhattan_dist": 8
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              5,
+              7
+            ],
+            "truth": [
+              2,
+              11
+            ],
+            "manhattan_dist": 7
+          }
+        ]
+      }
+    },
+    {
+      "Flat": {
+        "mean_dist": 4.666666666666667,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              7,
+              8
+            ],
+            "truth": [
+              7,
+              8
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              11,
+              9
+            ],
+            "truth": [
+              11,
+              9
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              5,
+              11
+            ],
+            "truth": [
+              11,
+              3
+            ],
+            "manhattan_dist": 14
+          }
+        ]
+      },
+      "Territorial(partition)": {
+        "mean_dist": 4.666666666666667,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              7,
+              8
+            ],
+            "truth": [
+              7,
+              8
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              11,
+              9
+            ],
+            "truth": [
+              11,
+              9
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              5,
+              11
+            ],
+            "truth": [
+              11,
+              3
+            ],
+            "manhattan_dist": 14
+          }
+        ]
+      },
+      "Territorial(familiarity)": {
+        "mean_dist": 4.666666666666667,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              7,
+              8
+            ],
+            "truth": [
+              7,
+              8
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              11,
+              9
+            ],
+            "truth": [
+              11,
+              9
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              5,
+              11
+            ],
+            "truth": [
+              11,
+              3
+            ],
+            "manhattan_dist": 14
+          }
+        ]
+      },
+      "Territorial(dual)": {
+        "mean_dist": 4.666666666666667,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              7,
+              8
+            ],
+            "truth": [
+              7,
+              8
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              11,
+              9
+            ],
+            "truth": [
+              11,
+              9
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              5,
+              11
+            ],
+            "truth": [
+              11,
+              3
+            ],
+            "manhattan_dist": 14
+          }
+        ]
+      }
+    },
+    {
+      "Flat": {
+        "mean_dist": 4.0,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              3,
+              9
+            ],
+            "truth": [
+              4,
+              10
+            ],
+            "manhattan_dist": 2
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              11,
+              6
+            ],
+            "truth": [
+              6,
+              1
+            ],
+            "manhattan_dist": 10
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              11,
+              6
+            ],
+            "truth": [
+              11,
+              6
+            ],
+            "manhattan_dist": 0
+          }
+        ]
+      },
+      "Territorial(partition)": {
+        "mean_dist": 4.0,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              3,
+              9
+            ],
+            "truth": [
+              4,
+              10
+            ],
+            "manhattan_dist": 2
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              11,
+              6
+            ],
+            "truth": [
+              6,
+              1
+            ],
+            "manhattan_dist": 10
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              11,
+              6
+            ],
+            "truth": [
+              11,
+              6
+            ],
+            "manhattan_dist": 0
+          }
+        ]
+      },
+      "Territorial(familiarity)": {
+        "mean_dist": 4.666666666666667,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              3,
+              9
+            ],
+            "truth": [
+              4,
+              10
+            ],
+            "manhattan_dist": 2
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              12,
+              6
+            ],
+            "truth": [
+              6,
+              1
+            ],
+            "manhattan_dist": 11
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              12,
+              6
+            ],
+            "truth": [
+              11,
+              6
+            ],
+            "manhattan_dist": 1
+          }
+        ]
+      },
+      "Territorial(dual)": {
+        "mean_dist": 4.0,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              3,
+              9
+            ],
+            "truth": [
+              4,
+              10
+            ],
+            "manhattan_dist": 2
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              11,
+              6
+            ],
+            "truth": [
+              6,
+              1
+            ],
+            "manhattan_dist": 10
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              11,
+              6
+            ],
+            "truth": [
+              11,
+              6
+            ],
+            "manhattan_dist": 0
+          }
+        ]
+      }
+    },
+    {
+      "Flat": {
+        "mean_dist": 2.3333333333333335,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              10,
+              10
+            ],
+            "truth": [
+              10,
+              10
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              10,
+              5
+            ],
+            "truth": [
+              10,
+              5
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              2,
+              6
+            ],
+            "truth": [
+              4,
+              1
+            ],
+            "manhattan_dist": 7
+          }
+        ]
+      },
+      "Territorial(partition)": {
+        "mean_dist": 5.333333333333333,
+        "success@2": 0.3333333333333333,
+        "success@4": 0.3333333333333333,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              3,
+              8
+            ],
+            "truth": [
+              10,
+              10
+            ],
+            "manhattan_dist": 9
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              10,
+              5
+            ],
+            "truth": [
+              10,
+              5
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              2,
+              6
+            ],
+            "truth": [
+              4,
+              1
+            ],
+            "manhattan_dist": 7
+          }
+        ]
+      },
+      "Territorial(familiarity)": {
+        "mean_dist": 2.3333333333333335,
+        "success@2": 0.6666666666666666,
+        "success@4": 0.6666666666666666,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              10,
+              10
+            ],
+            "truth": [
+              10,
+              10
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              10,
+              5
+            ],
+            "truth": [
+              10,
+              5
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              2,
+              6
+            ],
+            "truth": [
+              4,
+              1
+            ],
+            "manhattan_dist": 7
+          }
+        ]
+      },
+      "Territorial(dual)": {
+        "mean_dist": 5.333333333333333,
+        "success@2": 0.3333333333333333,
+        "success@4": 0.3333333333333333,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              3,
+              8
+            ],
+            "truth": [
+              10,
+              10
+            ],
+            "manhattan_dist": 9
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              10,
+              5
+            ],
+            "truth": [
+              10,
+              5
+            ],
+            "manhattan_dist": 0
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              2,
+              6
+            ],
+            "truth": [
+              4,
+              1
+            ],
+            "manhattan_dist": 7
+          }
+        ]
+      }
+    },
+    {
+      "Flat": {
+        "mean_dist": 8.0,
+        "success@2": 0.3333333333333333,
+        "success@4": 0.3333333333333333,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              3,
+              6
+            ],
+            "truth": [
+              12,
+              4
+            ],
+            "manhattan_dist": 11
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              1,
+              0
+            ],
+            "truth": [
+              2,
+              12
+            ],
+            "manhattan_dist": 13
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              2,
+              0
+            ],
+            "truth": [
+              2,
+              0
+            ],
+            "manhattan_dist": 0
+          }
+        ]
+      },
+      "Territorial(partition)": {
+        "mean_dist": 8.0,
+        "success@2": 0.0,
+        "success@4": 0.3333333333333333,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              11,
+              11
+            ],
+            "truth": [
+              12,
+              4
+            ],
+            "manhattan_dist": 8
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              1,
+              0
+            ],
+            "truth": [
+              2,
+              12
+            ],
+            "manhattan_dist": 13
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              4,
+              1
+            ],
+            "truth": [
+              2,
+              0
+            ],
+            "manhattan_dist": 3
+          }
+        ]
+      },
+      "Territorial(familiarity)": {
+        "mean_dist": 7.333333333333333,
+        "success@2": 0.3333333333333333,
+        "success@4": 0.3333333333333333,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              3,
+              4
+            ],
+            "truth": [
+              12,
+              4
+            ],
+            "manhattan_dist": 9
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              1,
+              0
+            ],
+            "truth": [
+              2,
+              12
+            ],
+            "manhattan_dist": 13
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              2,
+              0
+            ],
+            "truth": [
+              2,
+              0
+            ],
+            "manhattan_dist": 0
+          }
+        ]
+      },
+      "Territorial(dual)": {
+        "mean_dist": 8.0,
+        "success@2": 0.0,
+        "success@4": 0.3333333333333333,
+        "per_color": [
+          {
+            "color_id": 0,
+            "pred": [
+              11,
+              11
+            ],
+            "truth": [
+              12,
+              4
+            ],
+            "manhattan_dist": 8
+          },
+          {
+            "color_id": 1,
+            "pred": [
+              1,
+              0
+            ],
+            "truth": [
+              2,
+              12
+            ],
+            "manhattan_dist": 13
+          },
+          {
+            "color_id": 2,
+            "pred": [
+              4,
+              1
+            ],
+            "truth": [
+              2,
+              0
+            ],
+            "manhattan_dist": 3
+          }
+        ]
+      }
+    }
+  ],
+  "wall_time_sec": 46.88324189186096
+}

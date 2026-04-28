@@ -1,0 +1,39 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Memory Maze offline dataset (100GB) — never commit
+*.npz
+*.h5
+hm3d-*/
+hm3d_*/
+
+# Mac
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Matplotlib font cache (regenerated automatically)
+.mplconfig/
+
+# Outputs we may want to exclude later — keep them for now since they're tiny
+# outputs/
+
+# Large model files
+*.pkl
+*.pt
+*.ckpt

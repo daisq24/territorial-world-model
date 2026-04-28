@@ -1,0 +1,40 @@
+\paragraph{Environment.} We use the official \tos environment, with
+procedurally generated tree-topology layouts of $K{=}3$ rooms, each
+of size $6{\times}6$, populated with $n{=}4$ named objects (12 total).
+We use the pre-rendered dataset \texttt{MLL-Lab/tos-data} that ships
+with the \tos repository, providing both text and vision worlds for
+the same 100 scene seeds. We sub-sample $25$ scenes for the
+preliminary run.
+
+\paragraph{Models.} We compare a single open-source vision-language
+model (Qwen-VL-7B-Instruct, served locally with vLLM on an
+RTX-5090 32\,GB instance) against the territorial replay of its own
+trajectory. Optionally, an A800 80\,GB ablation with Qwen-VL-32B
+(INT4) is left for the Day-3 stretch goal. Closed-source
+foundation-model baselines (GPT-5.2, Gemini-3-Pro, Claude-4.5-Sonnet)
+are taken from the \tos paper's reported numbers; we do \emph{not}
+re-run them.
+
+\paragraph{Pipeline.} The four-stage pipeline (\verb|run_full_pipeline.sh|):
+(1) the \tos active-exploration rollout with the LLM-of-record;
+(2) post-hoc territorial replay
+(\verb|tos_extension/tos_territorial_agent.py|); (3) probing metrics on
+the LLM cogmap (\verb|tos_extension/tos_probing_metrics.py|); (4)
+side-by-side comparison and bar chart
+(\verb|tos_extension/compare_baseline.py|). All four stages are
+verified end-to-end against a synthetic \texttt{exploration.json} (see
+Section~\ref{sec:results}).
+
+\paragraph{Hyperparameters.} Tolerance $\epsilon{=}1.5$ grid units
+(one ego-bin worth of slack); buffer size $b{=}2$; familiarity decay
+$\lambda{=}0.05$; familiarity saturation $V_{\max}{=}20$. All values
+are reported in \verb|tos_extension/tos_territorial_agent.py| and are
+not tuned to the test trajectories.
+
+\paragraph{Metrics.} We report all probing metrics defined in \tos
+\S5.1 (Correctness, Stability, Self-tracking, Perception,
+Local$\leftrightarrow$Global) and \S5.3 (Belief Inertia: positional
+and orientational) on both LLM and \tb cognitive maps. The
+key comparison is \emph{relative}, i.e.\ delta values per metric, not
+absolute, because the \tb agent does not select actions; it only
+\emph{re-builds} the cognitive map from the same trajectory.

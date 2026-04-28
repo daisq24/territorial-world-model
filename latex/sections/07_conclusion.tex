@@ -1,0 +1,30 @@
+We proposed \tb, a structurally region-level cognitive map for active
+spatial exploration, and motivated it by the two characteristic
+failure modes the recent \tos benchmark identifies in foundation
+models---belief drift and belief inertia. We formalised the
+representation, derived analytical predictions on \tos's Stability
+and Belief~Inertia metrics
+(Propositions~\ref{prop:stab}--\ref{prop:inertia}), implemented the
+representation as a post-hoc replay tool that ingests \tos
+exploration logs without retraining, and validated the pipeline on a
+synthetic trajectory. Full-scale runs against Qwen-VL-7B on 25
+procedural 3-room scenes (text and vision worlds) are scheduled for
+the next two days.
+
+\paragraph{Looking ahead.}
+Three concrete extensions follow from this proposal:
+(i) \emph{familiarity-weighted overwrite}, in which territory
+familiarity tightens the contradiction tolerance (sketched in
+Section~\ref{app:math});
+(ii) \emph{multi-agent territorial belief}, in which two agents share
+territory ownership and revise each others' beliefs through
+familiarity-aware handoff (a direction \tos itself flags as
+future work);
+(iii) \emph{learned-not-just-replayed} \tb, in which the
+representation is wired into a VAGEN \citep{wang2025vagen} world
+model so that the agent itself \emph{acts} territorially, rather than
+the LLM acting flatly while \tb merely observes. Each of these
+extends the diagnostic baseline of this proposal into a substantive
+research line; the present project's contribution is to establish
+that the diagnostic question is well-posed, the formal model exists,
+and the implementation has been validated end-to-end.

@@ -1,0 +1,19 @@
+{
+  "num_transitions": 61254.0,
+  "flat_next_room_accuracy": 0.38963986025402425,
+  "territorial_next_room_accuracy": 0.4183400267737617,
+  "flat_aliased_transition_accuracy": 0.3817634607752348,
+  "territorial_aliased_transition_accuracy": 0.41116549808175684,
+  "aliased_transition_fraction": 0.9872334867926993,
+  "num_train_plans": 12000.0,
+  "num_test_plans": 3000.0,
+  "area_bins": [
+    989.0,
+    1776.0,
+    3021.75
+  ],
+  "aspect_bins": [
+    0.7936507936507936,
+    1.173913043478261
+  ]
+}
