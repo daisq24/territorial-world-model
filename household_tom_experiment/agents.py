@@ -101,8 +101,11 @@ class BaseFixer:
     name = 'BaseFixer'
 
     def __init__(self, agent_id: str = 'B', seed: int = 0,
-                 partner_visit_decay: float = 0.99,
-                 partner_visit_threshold: float = 0.5):
+                 partner_visit_decay: float = 1.0,
+                 partner_visit_threshold: float = 1.0):
+        # decay=1.0: partner's observed actions are permanent — partner doesn't
+        # un-place; once we've inferred "partner placed obj here," the cell
+        # remains "partner-acted" for the rest of the episode.
         self.agent_id = agent_id
         self.rng = np.random.RandomState(seed)
         self.partner_visit_decay = partner_visit_decay
@@ -116,7 +119,8 @@ class BaseFixer:
         self.maze_shape = None
 
     def reset(self, obs: dict):
-        layout = obs[self.agent_id]['maze_layout']
+        my = obs[self.agent_id]
+        layout = my['maze_layout']
         self.maze_shape = layout.shape
         self.own_visit = np.zeros(self.maze_shape, dtype=np.float32)
         self.partner_visit = np.zeros(self.maze_shape, dtype=np.float32)
@@ -124,6 +128,20 @@ class BaseFixer:
         self.last_seen_step = {}
         self.target_obj = None
         self.target_phase = 'idle'
+        # Action-grounded partner tracking: PRIOR-INITIALIZED.
+        # Common knowledge at episode start: all objects are at their canonical
+        # homes. So `_last_obj_cell` is seeded with home positions — any
+        # observation of an object at a non-home cell is itself evidence that
+        # SOMETHING moved it.
+        self._last_obj_cell: dict[int, tuple[int, int]] = {
+            oid: tuple(home) for oid, home in my['canonical_homes'].items()
+        }
+        # Partner-presence map (episode-cumulative, no decay): tracks every
+        # cell where the fixer has observed partner during this episode. Used
+        # to gate action detection: a displacement only counts as "partner-
+        # caused" if partner has been seen in the area, otherwise it's
+        # treated as non-partner (gravity / environment).
+        self.partner_seen_map = np.zeros(self.maze_shape, dtype=np.float32)
 
     def _territory_rooms(self, region_info, region_map) -> set[int]:
         """Default: own everything. Overridden by Territorial variants."""
@@ -147,19 +165,58 @@ class BaseFixer:
         # 1. Decay + bookkeeping
         self.partner_visit *= self.partner_visit_decay
         self.own_visit[cur] += 1.0
-        if my['partner_seen'] and my['partner_pos'] is not None:
-            self.partner_visit[my['partner_pos']] += 1.0
-            # Also bump cells the partner is "near" — coarse model
-            for di in range(-1, 2):
-                for dj in range(-1, 2):
-                    pi, pj = my['partner_pos'][0] + di, my['partner_pos'][1] + dj
-                    if 0 <= pi < self.maze_shape[0] and 0 <= pj < self.maze_shape[1]:
-                        self.partner_visit[pi, pj] += 0.3
 
-        # 2. Update belief from visible objects
-        for obj_id, cell in my['visible_objects']:
+        # Update partner-presence map (cumulative). Direct sighting + small
+        # 4-neighbor spillover so we still attribute action when fixer sees
+        # partner *adjacent* to the displacement cell (partner was clearly
+        # in the immediate area). 8-neighbor diagonal would over-pollute.
+        if my['partner_seen'] and my['partner_pos'] is not None:
+            ppos = tuple(my['partner_pos'])
+            self.partner_seen_map[ppos] += 1.0
+            for di, dj in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                ni, nj = ppos[0] + di, ppos[1] + dj
+                if (0 <= ni < self.maze_shape[0] and
+                    0 <= nj < self.maze_shape[1]):
+                    self.partner_seen_map[ni, nj] += 0.7
+
+        # 2. Build current visible-object snapshot
+        cur_visible = {oid: tuple(cell) for oid, cell in my['visible_objects']}
+
+        # 3. ACTION-GROUNDED ToM SIGNAL via OBJECT TRAJECTORY + PRESENCE GATE:
+        # When we observe an object at a cell different from where we believed
+        # it to be, SOMETHING moved it. We attribute the displacement to
+        # partner ONLY IF we have observational evidence partner has been near
+        # that cell. If partner has NOT been seen there, we treat the
+        # displacement as non-partner (gravity, environment) and leave
+        # partner_visit untouched — which makes the conjunction-rule
+        # (territorial_tom) correctly classify it as something to revert.
+        for oid, cur_cell in cur_visible.items():
+            last_cell = self._last_obj_cell.get(oid)
+            if last_cell is not None and last_cell != cur_cell:
+                # Displacement detected. Attribute to partner only if we've
+                # actually observed partner AT this cell at some point.
+                # Threshold 1.0 means partner was confirmed present at the
+                # exact displacement cell, ruling out gravity-style events
+                # that fixer never witnessed.
+                if self.partner_seen_map[cur_cell] >= 0.7:
+                    self.partner_visit[cur_cell] += 5.0
+                    # Spatial spillover for robustness
+                    for di in (-1, 0, 1):
+                        for dj in (-1, 0, 1):
+                            ni, nj = cur_cell[0] + di, cur_cell[1] + dj
+                            if (0 <= ni < self.maze_shape[0] and
+                                0 <= nj < self.maze_shape[1]):
+                                self.partner_visit[ni, nj] += 0.5
+                # else: keep partner_visit at 0 — this displacement was
+                # not caused by partner (likely gravity / environment).
+
+        # 4. Update belief from visible objects + remember positions for action detection
+        # IMPORTANT: update (not replace) — keep canonical-home prior for
+        # objects we haven't observed yet, override with observed positions.
+        for obj_id, cell in cur_visible.items():
             self.belief_object_cell[obj_id] = cell
             self.last_seen_step[obj_id] = step
+            self._last_obj_cell[obj_id] = cell
 
         territory = self._territory_rooms(region_info, region_map)
 
@@ -181,6 +238,15 @@ class BaseFixer:
 
         if self.target_obj is not None and self.target_obj in self.belief_object_cell:
             obj_cell = self.belief_object_cell[self.target_obj]
+            # Re-check the revert decision EVERY step before acting:
+            # partner_visit may have risen during travel (fresh action detection),
+            # in which case we should abandon this target.
+            ctx = {'region_map': region_map, 'partner_visit': self.partner_visit,
+                   'threshold': self.partner_visit_threshold, 'homes': homes}
+            if not self._should_revert(self.target_obj, obj_cell, ctx):
+                self.target_obj = None
+                return _least_visited_neighbor(
+                    layout, self.own_visit, cur, self.rng)
             if cur == obj_cell:
                 return ACT_PICKUP
             return _step_toward(layout, cur, obj_cell)

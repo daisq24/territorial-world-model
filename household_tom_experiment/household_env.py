@@ -148,6 +148,8 @@ class HouseholdEnv:
         max_steps: int = 200,
         visibility: int = 3,
         partner_schedule: Optional[list[int]] = None,
+        gravity_period: int = 50,
+        gravity_n_events: int = 6,
         seed: int = 0,
     ):
         self.layout = layout if layout is not None else make_default_layout()
@@ -156,6 +158,13 @@ class HouseholdEnv:
         self.max_steps = max_steps
         self.visibility = visibility
         self.partner_schedule = partner_schedule or [30, 80, 130]
+        # Gravity events: non-partner displacements that happen at fixed
+        # intervals. Models real-world non-agent dynamics (objects falling,
+        # automated dispensers, etc.). These are accidental by definition
+        # (not labeled in intentional_displacements).
+        self.gravity_period = gravity_period
+        self.gravity_n_events = gravity_n_events
+        self.gravity_steps: list[int] = []
         self.rng = np.random.RandomState(seed)
         self.region_map, self.region_info = extract_rooms(self.layout)
         self.state: Optional[HouseholdState] = None
@@ -236,6 +245,21 @@ class HouseholdEnv:
             intentional_displacements={},
         )
         self._partner_path = []
+        # Schedule gravity events: random steps NOT overlapping with partner
+        # actions, between step 50 and end - 20 (so fixer has time to react).
+        used = set(self.partner_schedule)
+        candidates = [s for s in range(50, max(60, self.max_steps - 20))
+                      if s not in used and not any(abs(s - u) < 5 for u in used)]
+        n = min(self.gravity_n_events, len(candidates))
+        if n > 0:
+            self.gravity_steps = sorted(
+                self.rng.choice(candidates, size=n, replace=False).tolist()
+            )
+        else:
+            self.gravity_steps = []
+        # Track which obj was displaced by gravity vs by partner (for metrics)
+        self._gravity_displaced: set[int] = set()
+        self._gravity_event_log: list[dict] = []  # per-event AT-EVENT detail
         return self._make_obs()
 
     # ----- step ----------------------------------------------------------
@@ -251,6 +275,9 @@ class HouseholdEnv:
         self._apply_action('A', a_A)
         self._apply_action('B', a_B)
         self.state.step += 1
+        # Apply gravity event AFTER both agents acted: simulates an
+        # environmental disturbance caused by neither agent.
+        self._apply_gravity_if_due()
         info = {
             'disturbance_log': self._latest_disturbance_info(),
             'objects': {k: dataclasses.asdict(v) for k, v in self.state.objects.items()},
@@ -286,6 +313,42 @@ class HouseholdEnv:
                     obj.holder = None
                     s.inventory[agent] = None
         # 'stay' or invalid → no-op
+
+    def _apply_gravity_if_due(self):
+        """Move a random non-held object to a random walkable cell.
+
+        Models real-world non-agent dynamics: an object falls off a shelf,
+        gets bumped by a vacuum, etc. The fixer is supposed to revert these
+        (they are accidental by definition), but ToM rules that rely on
+        partner-presence should NOT mistake them for partner placements.
+        """
+        s = self.state
+        if s.step not in self.gravity_steps:
+            return
+        candidates = [o for o in s.objects.values() if o.holder is None]
+        if not candidates:
+            return
+        obj = candidates[self.rng.randint(len(candidates))]
+        walkable = list(zip(*np.where(self.layout == 1)))
+        # Avoid placing on top of another object
+        free_cells = [c for c in walkable
+                      if not any(o2.cell == c and o2.obj_id != obj.obj_id
+                                 for o2 in s.objects.values())]
+        if not free_cells:
+            return
+        new_cell = free_cells[self.rng.randint(len(free_cells))]
+        obj.cell = new_cell
+        # NOTE: do NOT touch s.intentional_displacements — gravity is by
+        # definition an unintentional event with no partner involvement.
+        self._gravity_displaced.add(obj.obj_id)
+        # Log the AT-EVENT cell so metrics can reason about where gravity
+        # actually placed the object (vs. where it ended up after fixer's
+        # intervention).
+        self._gravity_event_log.append({
+            'obj_id': int(obj.obj_id),
+            'target_cell': tuple(new_cell),
+            'step': int(s.step),
+        })
 
     def _scripted_partner_action(self) -> int:
         """Plan a path step toward the next pending disturbance.
@@ -422,6 +485,8 @@ class HouseholdEnv:
                 'objects': {oid: dataclasses.asdict(o) for oid, o in s.objects.items()},
                 'step': s.step,
                 'intentional_displacements': dict(s.intentional_displacements),
+                'gravity_displaced': set(self._gravity_displaced),
+                'gravity_steps': list(self.gravity_steps),
             },
         }
 

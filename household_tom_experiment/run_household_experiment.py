@@ -46,15 +46,13 @@ def run_episode(env: HouseholdEnv, fixer, max_steps: int) -> dict:
     obs = env.reset()
     fixer.reset(obs)
 
-    # Track every revert action by the fixer to compute false / correct revert counts
-    revert_log = []  # list of (obj_id, was_intentional)
-    last_inventory = None
+    revert_log = []  # list of (obj_id, was_intentional, was_gravity)
+    # Track time-to-stable: # steps since the last "non-stable" event
+    # (= acceptable_rate at this step). Use to compute time-to-stable metric.
+    acceptable_over_time = []  # one entry per step
 
     for t in range(max_steps):
         a_B = fixer.select(obs)
-        # Detect: just before fixer's action, was the obj they're about to
-        # pick up an intentionally-displaced one? We log on PICKUP rather than
-        # on PLACE because pickup is the moment of "decision to revert".
         if a_B == 5:  # pickup
             cur = obs['B']['pos']
             for obj in obs['global']['objects'].values():
@@ -62,16 +60,34 @@ def run_episode(env: HouseholdEnv, fixer, max_steps: int) -> dict:
                     if obj['holder'] is None:
                         oid = obj['obj_id']
                         was_intentional = obs['global']['intentional_displacements'].get(oid, False)
-                        # Only log if the object was AWAY from canonical home
-                        # (otherwise pickup-then-place at same cell is harmless)
+                        was_gravity = oid in obs['global'].get('gravity_displaced', set())
                         home = obs['B']['canonical_homes'][oid]
                         if tuple(obj['cell']) != tuple(home):
                             revert_log.append({'obj_id': oid,
                                                'intentional': bool(was_intentional),
+                                               'gravity': bool(was_gravity),
                                                'step': t})
                         break
 
         obs, info = env.step({'A': None, 'B': a_B})
+
+        # Compute current acceptable_rate for time-to-stable tracking
+        cur_objects = obs['global']['objects']
+        cur_homes = obs['B']['canonical_homes']
+        cur_intent = obs['global']['intentional_displacements']
+        intentional_targets = {d.obj_id: d.target_cell
+                               for d in env.disturbances if d.intentional}
+        n_acc_now = 0
+        for o in cur_objects.values():
+            cell = tuple(o['cell'])
+            home_c = tuple(cur_homes[o['obj_id']])
+            if cell == home_c:
+                n_acc_now += 1
+            elif (cur_intent.get(o['obj_id'], False) and
+                  o['obj_id'] in intentional_targets and
+                  cell == tuple(intentional_targets[o['obj_id']])):
+                n_acc_now += 1
+        acceptable_over_time.append(n_acc_now / max(1, len(cur_objects)))
 
     # Final metrics
     final_objects = obs['global']['objects']
@@ -101,6 +117,49 @@ def run_episode(env: HouseholdEnv, fixer, max_steps: int) -> dict:
             acceptable += 1
     false_reverts = sum(1 for r in revert_log if r['intentional'])
     correct_reverts = sum(1 for r in revert_log if not r['intentional'])
+    # Gravity-specific reverts: a fixer that correctly handles non-partner
+    # displacements should revert these (gravity is accidental by definition).
+    gravity_reverts = sum(1 for r in revert_log if r.get('gravity', False))
+    n_gravity_events = len(obs['global'].get('gravity_displaced', set()))
+    gravity_revert_rate = (gravity_reverts / n_gravity_events
+                           if n_gravity_events > 0 else float('nan'))
+
+    # CONDITIONAL METRIC: gravity events whose TARGET CELL was in the
+    # displaced object's canonical home room. (Use the AT-EVENT cell, not
+    # end-of-episode — once fixer reverts, end-of-episode cell is home.)
+    # tom_room is expected to FAIL on these (accepts because same-room);
+    # territorial_tom should still revert (partner_visit not present).
+    grav_in_home_room_total = 0
+    grav_in_home_room_reverted = 0
+    region_map = env.region_map
+    for event in env._gravity_event_log:
+        oid = event['obj_id']
+        target_cell = event['target_cell']
+        home = tuple(homes[oid])
+        target_room = int(region_map[target_cell[0], target_cell[1]])
+        home_room = int(region_map[home[0], home[1]])
+        if target_room == home_room and target_room > 0:
+            grav_in_home_room_total += 1
+            was_reverted = any(r['obj_id'] == oid and r.get('gravity', False)
+                               for r in revert_log)
+            if was_reverted:
+                grav_in_home_room_reverted += 1
+    grav_home_room_revert_rate = (grav_in_home_room_reverted /
+                                   grav_in_home_room_total
+                                   if grav_in_home_room_total > 0 else float('nan'))
+
+    # Time to first acceptable_rate >= target AFTER all disturbances are done
+    # (otherwise the trivially-stable initial state would fool the metric).
+    # We start counting from the last partner-disturbance step + a small buffer.
+    target_acc = 0.9
+    last_disturb = (max(env.partner_schedule) if env.partner_schedule else 0)
+    last_grav = (max(env.gravity_steps) if env.gravity_steps else 0)
+    eval_start = max(last_disturb, last_grav) + 5
+    time_to_stable = max_steps - eval_start  # default: never reaches target
+    for t in range(eval_start, len(acceptable_over_time)):
+        if acceptable_over_time[t] >= target_acc:
+            time_to_stable = t - eval_start
+            break
 
     return {
         'final_at_home_count': int(at_home),
@@ -109,18 +168,36 @@ def run_episode(env: HouseholdEnv, fixer, max_steps: int) -> dict:
         'false_revert_count': int(false_reverts),
         'correct_revert_count': int(correct_reverts),
         'total_revert_attempts': int(len(revert_log)),
+        'gravity_revert_count': int(gravity_reverts),
+        'gravity_revert_rate': float(gravity_revert_rate)
+            if n_gravity_events > 0 else 0.0,
+        'n_gravity_events': int(n_gravity_events),
+        'grav_in_home_room_total': int(grav_in_home_room_total),
+        'grav_in_home_room_revert_rate': float(grav_home_room_revert_rate)
+            if grav_in_home_room_total > 0 else float('nan'),
+        'time_to_stable': int(time_to_stable),
+        'mean_acceptable_over_episode': float(np.mean(acceptable_over_time)),
         'n_objects': int(n),
     }
 
 
 def aggregate(per_episode: list[dict]) -> dict:
     keys = ['final_at_home_rate', 'acceptable_rate', 'false_revert_count',
-            'correct_revert_count', 'total_revert_attempts']
+            'correct_revert_count', 'total_revert_attempts',
+            'gravity_revert_count', 'gravity_revert_rate',
+            'grav_in_home_room_revert_rate',
+            'time_to_stable', 'mean_acceptable_over_episode']
     out = {}
     for k in keys:
         arr = np.array([ep[k] for ep in per_episode], dtype=float)
-        out[k + '_mean'] = float(arr.mean())
-        out[k + '_std'] = float(arr.std())
+        # Skip NaN values (e.g., gravity_revert_rate when no gravity events)
+        arr = arr[~np.isnan(arr)]
+        if len(arr) == 0:
+            out[k + '_mean'] = float('nan')
+            out[k + '_std'] = float('nan')
+        else:
+            out[k + '_mean'] = float(arr.mean())
+            out[k + '_std'] = float(arr.std())
     out['n_episodes'] = len(per_episode)
     return out
 
@@ -167,18 +244,20 @@ def main() -> int:
 
     print(f'\n[hh] done in {elapsed:.1f}s')
     print('\n=== summary ===')
-    print(f'{"condition":<22} {"home_rate":>13} {"acceptable":>13} '
-          f'{"false_rev":>13} {"correct_rev":>13}')
+    print(f'{"condition":<22} {"accept":>9} {"false_rev":>10} {"correct_rev":>10} '
+          f'{"grav_all":>9} {"grav_homeR":>11} {"t_stable":>10}')
     agg_all = {}
     for c in cond_names:
         agg = aggregate(by_cond[c])
         agg_all[c] = agg
         print(
             f'{c:<22} '
-            f'{agg["final_at_home_rate_mean"]:>5.2f}±{agg["final_at_home_rate_std"]:>4.2f}  '
-            f'{agg["acceptable_rate_mean"]:>5.2f}±{agg["acceptable_rate_std"]:>4.2f}  '
-            f'{agg["false_revert_count_mean"]:>5.2f}±{agg["false_revert_count_std"]:>4.2f}  '
-            f'{agg["correct_revert_count_mean"]:>5.2f}±{agg["correct_revert_count_std"]:>4.2f}'
+            f'{agg["acceptable_rate_mean"]:>4.2f}±{agg["acceptable_rate_std"]:>3.2f} '
+            f'{agg["false_revert_count_mean"]:>4.2f}±{agg["false_revert_count_std"]:>4.2f} '
+            f'{agg["correct_revert_count_mean"]:>4.2f}±{agg["correct_revert_count_std"]:>4.2f} '
+            f'{agg["gravity_revert_rate_mean"]:>4.2f}±{agg["gravity_revert_rate_std"]:>3.2f} '
+            f'{agg["grav_in_home_room_revert_rate_mean"]:>4.2f}±{agg["grav_in_home_room_revert_rate_std"]:>4.2f} '
+            f'{agg["time_to_stable_mean"]:>5.1f}±{agg["time_to_stable_std"]:>3.1f}'
         )
 
     metrics_path = out_dir / f'{args.out_prefix}household_metrics.json'
