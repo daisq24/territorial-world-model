@@ -246,6 +246,47 @@ class TerritorialReverter(BaseFixer):
         return True  # within territory → always revert; outside is filtered upstream
 
 
+class TerritorialToMRoomOnly(TerritorialReverter):
+    """Ablation: ToM uses ONLY the same-room signal (no partner_visit).
+
+    Accept (don't revert) IFF the displaced object is in the same room as its
+    canonical home. Tests whether room-level structure alone is enough.
+    Expected weakness: an *accidental* drop that lands in the home room
+    will be wrongly accepted (no partner-presence check).
+    """
+    name = 'TerritorialToMRoomOnly'
+
+    def _should_revert(self, obj_id, observed_cell, ctx):
+        region_map = ctx['region_map']
+        homes = ctx['homes']
+        home_cell = homes.get(obj_id)
+        if home_cell is None:
+            return True
+        obs_room = int(region_map[observed_cell[0], observed_cell[1]])
+        home_room = int(region_map[home_cell[0], home_cell[1]])
+        same_room = (obs_room == home_room and obs_room > 0)
+        if same_room:
+            return False
+        return True
+
+
+class TerritorialToMVisitOnly(TerritorialReverter):
+    """Ablation: ToM uses ONLY the partner_visit signal (no same-room rule).
+
+    Accept (don't revert) IFF partner has been observed near the displaced
+    cell recently. Tests whether partner-presence alone is enough.
+    Expected weakness: an *accidental* drop where partner was passing through
+    will be wrongly accepted (no spatial-coherence check).
+    """
+    name = 'TerritorialToMVisitOnly'
+
+    def _should_revert(self, obj_id, observed_cell, ctx):
+        partner_vis = float(ctx['partner_visit'][observed_cell[0], observed_cell[1]])
+        if partner_vis > ctx['threshold']:
+            return False
+        return True
+
+
 class TerritorialToMReverter(TerritorialReverter):
     """The user's actual proposed method: territorial × Theory-of-Mind.
 
@@ -288,5 +329,7 @@ class TerritorialToMReverter(TerritorialReverter):
 FIXER_REGISTRY = {
     'flat': FlatReverter,
     'territorial': TerritorialReverter,
-    'territorial_tom': TerritorialToMReverter,
+    'tom_room': TerritorialToMRoomOnly,    # ablation: same-room signal alone
+    'tom_visit': TerritorialToMVisitOnly,  # ablation: partner-visit signal alone
+    'territorial_tom': TerritorialToMReverter,  # full: both signals (ours)
 }

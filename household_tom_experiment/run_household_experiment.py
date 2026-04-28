@@ -130,8 +130,11 @@ def main() -> int:
     p.add_argument('--episodes', type=int, default=10)
     p.add_argument('--seeds', type=int, default=3)
     p.add_argument('--steps', type=int, default=200)
-    p.add_argument('--conditions', default='flat,territorial,territorial_tom')
+    p.add_argument('--conditions',
+                   default='flat,territorial,tom_room,tom_visit,territorial_tom')
     p.add_argument('--outdir', default='outputs')
+    p.add_argument('--out_prefix', default='',
+                   help='Prefix for output files, e.g. "phase2_"')
     args = p.parse_args()
 
     out_dir = _HERE / args.outdir
@@ -178,7 +181,7 @@ def main() -> int:
             f'{agg["correct_revert_count_mean"]:>5.2f}±{agg["correct_revert_count_std"]:>4.2f}'
         )
 
-    metrics_path = out_dir / 'household_metrics.json'
+    metrics_path = out_dir / f'{args.out_prefix}household_metrics.json'
     with metrics_path.open('w') as f:
         json.dump({'config': vars(args), 'aggregate': agg_all,
                    'per_episode': by_cond, 'wall_time_sec': elapsed},
@@ -192,7 +195,16 @@ def main() -> int:
         import matplotlib.pyplot as plt
         fig, axes = plt.subplots(1, 3, figsize=(13, 4))
         cs = cond_names
-        colors = ['#888', '#3a86ff', '#e63946']
+        # 5-condition palette: gray (flat) / blue (territorial) / amber (room-only)
+        # / purple (visit-only) / red (full ToM, ours)
+        palette = {
+            'flat':            '#888888',
+            'territorial':     '#3a86ff',
+            'tom_room':        '#f2a900',
+            'tom_visit':       '#9b5de5',
+            'territorial_tom': '#e63946',
+        }
+        colors = [palette.get(c, '#888') for c in cs]
         for ax, key, ylabel, want in zip(
             axes,
             ['final_at_home_rate', 'false_revert_count', 'correct_revert_count'],
@@ -209,8 +221,9 @@ def main() -> int:
                 tick.set_rotation(15)
         plt.suptitle(f'Household ToM Experiment — {args.episodes * args.seeds} episodes')
         plt.tight_layout()
-        plt.savefig(out_dir / 'comparison.png', dpi=120, bbox_inches='tight')
-        print(f'[hh] wrote {out_dir / "comparison.png"}')
+        comp_path = out_dir / f'{args.out_prefix}comparison.png'
+        plt.savefig(comp_path, dpi=120, bbox_inches='tight')
+        print(f'[hh] wrote {comp_path}')
     except Exception as e:
         print(f'(chart skipped: {e})')
 
